@@ -37,7 +37,7 @@
 /* Light / Sunlight Mode overrides (Ultra High Contrast for Outdoor Construction Sites) */
 [data-theme='sunlight'] {
   --bg-app: #f1f5f9;
-  --bg-sidebar: #0f172a;
+  --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
   --border-card: #000000;
   --border-card-hover: #000000;

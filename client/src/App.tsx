@@ -619,8 +619,8 @@ function App() {
           color: var(--text-primary) !important;
         }
         [data-theme='sunlight'] .nav-hover:hover {
-          background: rgba(0,0,0,0.2) !important;
-          color: #ffffff !important;
+          background: rgba(0,0,0,0.06) !important;
+          color: var(--text-primary) !important;
         }
       `}</style>
 
