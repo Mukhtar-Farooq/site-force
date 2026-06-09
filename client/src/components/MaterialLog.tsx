@@ -6,6 +6,13 @@ interface Zone {
   name: string;
 }
 
+interface Worker {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+}
+
 interface Material {
   id: string;
   name: string;
@@ -20,17 +27,20 @@ interface Material {
   balanceDue: number;
   photoBase64?: string;
   zoneId?: string;
+  paidByWorkerId?: string;
 }
 
 interface MaterialLogProps {
   materials: Material[];
   zones: Zone[];
+  workers: Worker[];
   onLogMaterial: (materialData: Omit<Material, 'id' | 'totalCost' | 'balanceDue' | 'paymentStatus'>) => Promise<any>;
 }
 
 export const MaterialLog: React.FC<MaterialLogProps> = ({
   materials,
   zones,
+  workers,
   onLogMaterial,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -49,6 +59,7 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
   });
   const [zoneId, setZoneId] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | undefined>(undefined);
+  const [paidByWorkerId, setPaidByWorkerId] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,6 +88,7 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
         date,
         zoneId: zoneId || undefined,
         photoBase64,
+        paidByWorkerId: paidByWorkerId || undefined,
       });
 
       // Reset Form
@@ -88,6 +100,7 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
       setPaidAmount(0);
       setZoneId('');
       setPhotoBase64(undefined);
+      setPaidByWorkerId('');
       setShowAddModal(false);
     } catch (err) {
       console.error(err);
@@ -165,7 +178,14 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
                         <span>{m.name}</span>
                       </div>
                     </td>
-                    <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{m.supplier}</td>
+                    <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
+                      <div>{m.supplier}</div>
+                      {m.paidByWorkerId && (
+                        <div style={{ fontSize: '11px', color: 'var(--accent-secondary)', marginTop: '2px', fontWeight: 500 }}>
+                          Paid by: {workers.find(w => w.id === m.paidByWorkerId)?.name || 'Crew Member'}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{m.quantity} {m.unit}</td>
                     <td style={{ padding: '12px' }}>
                       <span style={{
@@ -320,6 +340,16 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
                   <option value="">-- No Zone Allocation --</option>
                   {zones.map((z) => (
                     <option key={z.id} value={z.id}>{z.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Paid By (Payer)</label>
+                <select className="form-select" value={paidByWorkerId} onChange={(e) => setPaidByWorkerId(e.target.value)}>
+                  <option value="">Owner (Default)</option>
+                  {workers.filter(w => w.status === 'Active').map((w) => (
+                    <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
                   ))}
                 </select>
               </div>

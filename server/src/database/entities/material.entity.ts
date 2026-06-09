@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Zone } from './zone.entity';
+import { Worker } from './worker.entity';
 
 @Entity()
 export class Material {
@@ -45,4 +46,11 @@ export class Material {
   @ManyToOne(() => Zone, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'zoneId' })
   zone: Zone;
+
+  @Column({ nullable: true })
+  paidByWorkerId: string;
+
+  @ManyToOne(() => Worker, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'paidByWorkerId' })
+  paidByWorker: Worker;
 }

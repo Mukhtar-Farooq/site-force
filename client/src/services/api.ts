@@ -537,6 +537,29 @@ export const ApiService = {
     cachedMaterials.unshift(localMaterial);
     setLocalCache('materials', cachedMaterials);
 
+    // Update worker ledger offline if paidByWorkerId is set!
+    if (materialData.paidByWorkerId && paidAmount > 0) {
+      const ledgers = getLocalCache('ledgers', []);
+      const workerLedger = ledgers.find((l: any) => l.worker.id === materialData.paidByWorkerId);
+      if (workerLedger) {
+        const localTx = {
+          id: generateUUID(),
+          workerId: materialData.paidByWorkerId,
+          type: 'Wage',
+          amount: paidAmount,
+          date: materialData.date || new Date().toISOString().split('T')[0],
+          zoneId: materialData.zoneId,
+          notes: `Reimbursement: Paid for ${materialData.name} (${materialData.quantity} ${materialData.unit})`,
+        };
+        workerLedger.transactions.unshift(localTx);
+        workerLedger.earned = workerLedger.transactions
+          .filter((t: any) => t.type === 'Wage')
+          .reduce((sum: number, t: any) => sum + t.amount, 0);
+        workerLedger.balance = workerLedger.earned - workerLedger.advances - workerLedger.settled;
+        setLocalCache('ledgers', ledgers);
+      }
+    }
+
     if (ApiService.isOnline()) {
       try {
         const saved = await fetchWithAuth('materials', {

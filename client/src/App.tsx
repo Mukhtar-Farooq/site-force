@@ -589,6 +589,7 @@ function App() {
           <MaterialLog
             materials={materials}
             zones={userZones}
+            workers={workers}
             onLogMaterial={handleLogMaterial}
           />
         )}

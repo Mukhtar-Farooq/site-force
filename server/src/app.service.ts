@@ -360,7 +360,21 @@ export class AppService {
       paymentStatus,
     });
 
-    return this.materialRepo.save(material);
+    const saved = await this.materialRepo.save(material);
+
+    if (dto.paidByWorkerId && paidAmount > 0) {
+      const tx = this.transactionRepo.create({
+        workerId: dto.paidByWorkerId,
+        type: 'Wage',
+        amount: paidAmount,
+        date: dto.date || new Date().toISOString().split('T')[0],
+        zoneId: dto.zoneId,
+        notes: `Reimbursement: Paid for ${dto.name} (${dto.quantity} ${dto.unit})`,
+      });
+      await this.transactionRepo.save(tx);
+    }
+
+    return saved;
   }
 
   async findAllMaterials(user: DecodedUser): Promise<Material[]> {
