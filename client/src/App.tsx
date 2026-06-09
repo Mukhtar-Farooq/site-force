@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ApiService } from './services/api';
-import { isMockAuth, auth } from './config/firebase';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
 // Icons
 import {
@@ -17,7 +15,8 @@ import {
   WifiOff,
   RefreshCw,
   LogOut,
-  Hammer
+  Hammer,
+  Shield
 } from 'lucide-react';
 
 // Subcomponents
@@ -27,6 +26,7 @@ import { AttendanceGrid } from './components/AttendanceGrid';
 import { FinancialLedger } from './components/FinancialLedger';
 import { MaterialLog } from './components/MaterialLog';
 import { ZoneAllocator } from './components/ZoneAllocator';
+import { SupervisorsManager } from './components/SupervisorsManager';
 
 function App() {
   // Navigation & UI States
@@ -36,7 +36,7 @@ function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   // Authentication States
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(() => ApiService.getCurrentUser());
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
@@ -47,6 +47,9 @@ function App() {
   const [zones, setZones] = useState<any[]>([]);
   const [ledgers, setLedgers] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [supervisors, setSupervisors] = useState<any[]>([]);
+  const [selectedZoneId, setSelectedZoneId] = useState<string>('');
+
   const [stats, setStats] = useState<any>({
     totalActiveWorkers: 0,
     masonsCount: 0,
@@ -82,24 +85,23 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Auth Handler
+  // Set default selectedZoneId for supervisors
   useEffect(() => {
-    if (isMockAuth) {
-      // Automatic developer supervisor login
-      setUser({
-        email: 'dev@siteforce.com',
-        displayName: 'Developer Supervisor',
-        uid: 'dev-supervisor-id',
-      });
-    } else if (auth) {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        setUser(firebaseUser);
-      });
-      return () => unsubscribe();
+    if (user) {
+      const userZones = user.role === 'owner' ? zones : (user.zones || []);
+      if (user.role === 'supervisor') {
+        if (userZones.length === 1) {
+          setSelectedZoneId(userZones[0].id);
+        } else if (userZones.length > 1 && !selectedZoneId) {
+          setSelectedZoneId(''); // Consolidated across My Zones
+        }
+      } else {
+        setSelectedZoneId('');
+      }
     }
-  }, []);
+  }, [user, zones]);
 
-  // Load Data on startup / login / tab change
+  // Load Data on startup / login
   const loadData = async () => {
     if (!user) return;
     try {
@@ -107,15 +109,21 @@ function App() {
       const zoneList = await ApiService.getZones();
       const ledgerList = await ApiService.getLedgers();
       const materialList = await ApiService.getMaterials();
-      const dashboardStats = await ApiService.getDashboardStats();
 
       setWorkers(workerList);
       setZones(zoneList);
       setLedgers(ledgerList);
       setMaterials(materialList);
-      setStats(dashboardStats);
+
+      if (user.role === 'owner') {
+        const supervisorList = await ApiService.getSupervisors();
+        setSupervisors(supervisorList);
+      }
     } catch (err) {
       console.error('Error loading data from API services:', err);
+      if (!localStorage.getItem('siteforce_token')) {
+        setUser(null);
+      }
     }
   };
 
@@ -123,12 +131,22 @@ function App() {
     loadData();
   }, [user]);
 
-  // Re-fetch dashboard stats when active tab transitions back to dashboard
+  // Fetch dashboard stats when active tab, zone selection, or user changes
   useEffect(() => {
-    if (activeTab === 'dashboard') {
-      loadData();
-    }
-  }, [activeTab]);
+    const fetchStats = async () => {
+      if (!user) return;
+      try {
+        const dashboardStats = await ApiService.getDashboardStats(selectedZoneId);
+        setStats(dashboardStats);
+      } catch (err) {
+        console.error('Error loading dashboard stats:', err);
+        if (!localStorage.getItem('siteforce_token')) {
+          setUser(null);
+        }
+      }
+    };
+    fetchStats();
+  }, [selectedZoneId, activeTab, user]);
 
   const triggerSync = async () => {
     if (!navigator.onLine || isSyncing) return;
@@ -172,18 +190,9 @@ function App() {
     if (window.confirm('Are you sure you want to delete this worker?')) {
       if (ApiService.isOnline() && !id.startsWith('local-')) {
         try {
-          let token = 'dev-token';
-          if (!isMockAuth && auth && auth.currentUser) {
-            token = await auth.currentUser.getIdToken();
-          }
-          await fetch(`http://localhost:5000/api/workers/${id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          await ApiService.deleteWorker(id);
         } catch (err) {
-          console.warn('Failed to delete worker on server, local only:', err);
+          console.warn('Failed to delete worker on server:', err);
         }
       }
       const updated = workers.filter((w: any) => w.id !== id);
@@ -217,6 +226,17 @@ function App() {
     return saved;
   };
 
+  const handleCreateSupervisor = async (supervisorData: any) => {
+    const saved = await ApiService.createSupervisor(supervisorData);
+    await loadData();
+    return saved;
+  };
+
+  const handleDeleteSupervisor = async (id: string) => {
+    await ApiService.deleteSupervisor(id);
+    await loadData();
+  };
+
   // Auth Functions
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,15 +244,8 @@ function App() {
     setAuthLoading(true);
     setAuthError('');
     try {
-      if (isMockAuth) {
-        setUser({
-          email: authEmail,
-          displayName: 'Developer Supervisor',
-          uid: 'dev-supervisor-id',
-        });
-      } else {
-        await signInWithEmailAndPassword(auth, authEmail, authPassword);
-      }
+      const userObj = await ApiService.login(authEmail, authPassword);
+      setUser(userObj);
     } catch (err: any) {
       setAuthError(err.message || 'Authentication failed. Please check credentials.');
     } finally {
@@ -241,12 +254,28 @@ function App() {
   };
 
   const handleLogout = async () => {
-    if (isMockAuth) {
-      setUser(null);
-    } else if (auth) {
-      await signOut(auth);
-    }
+    ApiService.logout();
+    setUser(null);
+    setActiveTab('dashboard');
   };
+
+  // Filter navigation items by role
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'crew', label: 'Crew Registry', icon: Users },
+    { id: 'attendance', label: 'Daily Log', icon: CalendarDays },
+    { id: 'finance', label: 'Finance Ledger', icon: DollarSign },
+    { id: 'materials', label: 'Material Log', icon: Package },
+  ];
+
+  if (user && user.role === 'owner') {
+    navItems.push(
+      { id: 'supervisors', label: 'Supervisors', icon: Shield },
+      { id: 'zones', label: 'Site Zones', icon: MapPin }
+    );
+  }
+
+  const userZones = user ? (user.role === 'owner' ? zones : (user.zones || [])) : [];
 
   // Render Login UI
   if (!user) {
@@ -314,12 +343,6 @@ function App() {
               {authLoading ? 'Verifying...' : 'Sign In'}
             </button>
           </form>
-
-          {isMockAuth && (
-            <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
-              Note: App running in Bypass Mock Mode. You can log in automatically.
-            </div>
-          )}
         </div>
       </div>
     );
@@ -357,14 +380,7 @@ function App() {
 
         {/* Tab Selection Navigation */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { id: 'crew', label: 'Crew Registry', icon: Users },
-            { id: 'attendance', label: 'Daily Log', icon: CalendarDays },
-            { id: 'finance', label: 'Finance Ledger', icon: DollarSign },
-            { id: 'materials', label: 'Material Log', icon: Package },
-            { id: 'zones', label: 'Site Zones', icon: MapPin },
-          ].map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -494,7 +510,16 @@ function App() {
         height: '100vh',
       }}>
         {/* Tab Content Router */}
-        {activeTab === 'dashboard' && <Dashboard stats={stats} onNavigate={setActiveTab} />}
+        {activeTab === 'dashboard' && (
+          <Dashboard 
+            stats={stats} 
+            zones={userZones}
+            selectedZoneId={selectedZoneId}
+            onZoneChange={setSelectedZoneId}
+            onNavigate={setActiveTab}
+            userRole={user.role}
+          />
+        )}
         {activeTab === 'crew' && (
           <WorkerManager
             workers={workers}
@@ -506,7 +531,7 @@ function App() {
         {activeTab === 'attendance' && (
           <AttendanceGrid
             workers={workers}
-            zones={zones}
+            zones={userZones}
             onMarkAttendance={handleMarkAttendance}
             onFetchAttendanceByDate={ApiService.getAttendanceByDate}
           />
@@ -514,17 +539,26 @@ function App() {
         {activeTab === 'finance' && (
           <FinancialLedger
             ledgers={ledgers}
+            zones={userZones}
             onLogTransaction={handleLogTransaction}
           />
         )}
         {activeTab === 'materials' && (
           <MaterialLog
             materials={materials}
-            zones={zones}
+            zones={userZones}
             onLogMaterial={handleLogMaterial}
           />
         )}
-        {activeTab === 'zones' && (
+        {activeTab === 'supervisors' && user.role === 'owner' && (
+          <SupervisorsManager
+            supervisors={supervisors}
+            zones={zones}
+            onCreateSupervisor={handleCreateSupervisor}
+            onDeleteSupervisor={handleDeleteSupervisor}
+          />
+        )}
+        {activeTab === 'zones' && user.role === 'owner' && (
           <ZoneAllocator
             zones={zones}
             onCreateZone={handleCreateZone}

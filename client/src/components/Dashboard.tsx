@@ -1,6 +1,11 @@
 import React from 'react';
 import { Users, Package, DollarSign, Activity, Hammer } from 'lucide-react';
 
+interface Zone {
+  id: string;
+  name: string;
+}
+
 interface DashboardProps {
   stats: {
     totalActiveWorkers: number;
@@ -14,20 +19,56 @@ interface DashboardProps {
     totalMaterialOutstanding: number;
     totalSiteCost: number;
   };
+  zones: Zone[];
+  selectedZoneId: string;
+  onZoneChange: (zoneId: string) => void;
   onNavigate: (tab: string) => void;
+  userRole: string; // 'owner' or 'supervisor'
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
-  // Safe math calculations
+export const Dashboard: React.FC<DashboardProps> = ({
+  stats,
+  zones,
+  selectedZoneId,
+  onZoneChange,
+  onNavigate,
+  userRole,
+}) => {
   const laborPct = stats.totalSiteCost > 0 ? (stats.totalLaborWages / stats.totalSiteCost) * 100 : 50;
   const materialPct = stats.totalSiteCost > 0 ? (stats.totalMaterialCost / stats.totalSiteCost) * 100 : 50;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Title Header */}
-      <div>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '6px' }}>Site Overview</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Real-time status of workers, materials, and cost liabilities.</p>
+      
+      {/* Title Header & Zone Filter Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '6px' }}>Site Overview</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Real-time status of workers, materials, and cost liabilities.</p>
+        </div>
+        
+        {/* Zone Filter Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter by Zone:</span>
+          <select 
+            className="form-select" 
+            style={{ minWidth: '180px', padding: '8px 12px' }}
+            value={selectedZoneId}
+            onChange={(e) => onZoneChange(e.target.value)}
+          >
+            {userRole === 'owner' ? (
+              <option value="">Consolidated (All Zones)</option>
+            ) : (
+              zones.length > 1 && <option value="">Consolidated (My Zones)</option>
+            )}
+            {zones.map((z) => (
+              <option key={z.id} value={z.id}>{z.name}</option>
+            ))}
+            {userRole === 'supervisor' && zones.length === 0 && (
+              <option value="" disabled>No Zones Assigned</option>
+            )}
+          </select>
+        </div>
       </div>
 
       {/* Grid Stats */}
@@ -109,7 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
         </div>
       </div>
 
-      {/* Main Analysis Panel (Glassmorphism visualization) */}
+      {/* Main Analysis Panel */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
         
         {/* Cost Allocation Chart */}

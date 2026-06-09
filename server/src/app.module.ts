@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Worker } from './database/entities/worker.entity';
@@ -8,15 +9,18 @@ import { Attendance } from './database/entities/attendance.entity';
 import { Transaction } from './database/entities/transaction.entity';
 import { Material } from './database/entities/material.entity';
 import { Zone } from './database/entities/zone.entity';
-import * as admin from 'firebase-admin';
-import * as fs from 'fs';
-import * as path from 'path';
+import { User } from './database/entities/user.entity';
+import * as crypto from 'crypto';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET ?? 'siteforce-secret-key-2026',
+      signOptions: { expiresIn: '7d' },
     }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
@@ -26,10 +30,10 @@ import * as path from 'path';
           return {
             type: 'postgres',
             url: dbUrl,
-            entities: [Worker, Attendance, Transaction, Material, Zone],
-            synchronize: true, // Automatically keeps database tables in sync with schema
+            entities: [Worker, Attendance, Transaction, Material, Zone, User],
+            synchronize: true, // Auto-sync database tables
             ssl: {
-              rejectUnauthorized: false, // Required for secure hosted postgres connections
+              rejectUnauthorized: false,
             },
           };
         } else {
@@ -37,58 +41,51 @@ import * as path from 'path';
           return {
             type: 'sqlite',
             database: 'database.sqlite',
-            entities: [Worker, Attendance, Transaction, Material, Zone],
+            entities: [Worker, Attendance, Transaction, Material, Zone, User],
             synchronize: true,
           };
         }
       },
     }),
-    TypeOrmModule.forFeature([Worker, Attendance, Transaction, Material, Zone]),
+    TypeOrmModule.forFeature([Worker, Attendance, Transaction, Material, Zone, User]),
   ],
   controllers: [AppController],
   providers: [AppService],
+  exports: [JwtModule], // Export so it can be used for auth guard
 })
 export class AppModule implements OnModuleInit {
-  onModuleInit() {
-    if (process.env.BYPASS_AUTH === 'true') {
-      console.log('Firebase Auth Bypassed (BYPASS_AUTH=true is active)');
-      return;
-    }
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
 
-    const serviceAccountPath = path.resolve(process.cwd(), 'firebase-adminsdk.json');
-    if (fs.existsSync(serviceAccountPath)) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccountPath),
+  async onModuleInit() {
+    // Seed default Owner account if no users exist
+    try {
+      const userCount = await this.userRepo.count();
+      if (userCount === 0) {
+        console.log('No user records found. Seeding default owner: owner@siteforce.com / owner123');
+        
+        // Hash password using pbkdf2 native crypto
+        const passwordHash = crypto
+          .pbkdf2Sync('owner123', 'siteforce-salt', 1000, 64, 'sha512')
+          .toString('hex');
+
+        const defaultOwner = this.userRepo.create({
+          email: 'owner@siteforce.com',
+          password: passwordHash,
+          role: 'owner',
+          zones: [],
         });
-        console.log('Firebase Admin SDK initialized successfully via local service account JSON.');
-      } catch (err) {
-        console.error('Error initializing Firebase Admin via JSON file:', err);
+        await this.userRepo.save(defaultOwner);
+        console.log('Default owner seeded successfully.');
       }
-    } else {
-      const firebasePrivateKey = process.env.FIREBASE_PRIVATE_KEY;
-      const firebaseClientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const firebaseProjectId = process.env.FIREBASE_PROJECT_ID;
-
-      if (firebasePrivateKey && firebaseClientEmail && firebaseProjectId) {
-        try {
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: firebaseProjectId,
-              clientEmail: firebaseClientEmail,
-              privateKey: firebasePrivateKey.replace(/\\n/g, '\n'),
-            }),
-          });
-          console.log('Firebase Admin SDK initialized successfully via environment variables.');
-        } catch (err) {
-          console.error('Error initializing Firebase Admin via environment variables:', err);
-        }
-      } else {
-        console.warn(
-          'WARNING: Firebase Authentication credentials are missing. ' +
-          'Set BYPASS_AUTH=true in .env for local offline testing, or add a firebase-adminsdk.json private key file.',
-        );
-      }
+    } catch (err) {
+      console.error('Error seeding database:', err);
     }
   }
 }
+
+// InjectRepository helper import (TypeORM decorators inside app.module)
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';

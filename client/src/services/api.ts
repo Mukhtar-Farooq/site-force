@@ -1,5 +1,3 @@
-import { isMockAuth, auth } from '../config/firebase';
-
 const BASE_URL = 'https://site-force-backend.onrender.com/api';
 
 // Simple UUID generator for local offline entity creation
@@ -46,17 +44,12 @@ export function addToSyncQueue(mutation: Omit<SyncMutation, 'id'>) {
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
   
-  // Get Auth Token
-  let token = 'dev-token';
-  if (!isMockAuth && auth && auth.currentUser) {
-    try {
-      token = await auth.currentUser.getIdToken();
-    } catch (err) {
-      console.warn('Error fetching ID token from Firebase:', err);
-    }
+  // Get custom JWT Token from localStorage
+  const token = localStorage.getItem('siteforce_token');
+  if (token) {
+    headers.append('Authorization', `Bearer ${token}`);
   }
 
-  headers.append('Authorization', `Bearer ${token}`);
   if (!(options.body instanceof FormData)) {
     headers.append('Content-Type', 'application/json');
   }
@@ -68,7 +61,12 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API Error [${response.status}]: ${errorText || response.statusText}`);
+    if (response.status === 401) {
+      // Clear token on unauthorized (token expired / invalid)
+      localStorage.removeItem('siteforce_token');
+      localStorage.removeItem('siteforce_user');
+    }
+    throw new Error(errorText || response.statusText);
   }
 
   if (response.status === 204) return null;
@@ -77,6 +75,57 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
 // Main API Service
 export const ApiService = {
+  // ==========================================
+  // CUSTOM LOGIN UTILS
+  // ==========================================
+  login: async (email: string, password: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Authentication failed');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('siteforce_token', data.token);
+    localStorage.setItem('siteforce_user', JSON.stringify(data.user));
+    return data.user;
+  },
+
+  logout: () => {
+    localStorage.removeItem('siteforce_token');
+    localStorage.removeItem('siteforce_user');
+  },
+
+  getCurrentUser: () => {
+    const data = localStorage.getItem('siteforce_user');
+    return data ? JSON.parse(data) : null;
+  },
+
+  // ==========================================
+  // SUPERVISOR MANAGEMENT (Owner only)
+  // ==========================================
+  getSupervisors: async () => {
+    return fetchWithAuth('auth/supervisors');
+  },
+
+  createSupervisor: async (supervisorData: any) => {
+    return fetchWithAuth('auth/supervisors', {
+      method: 'POST',
+      body: JSON.stringify(supervisorData),
+    });
+  },
+
+  deleteSupervisor: async (id: string) => {
+    return fetchWithAuth(`auth/supervisors/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // ==========================================
   // SYNC UTILS
   // ==========================================
@@ -108,7 +157,7 @@ export const ApiService = {
       console.log('Offline synchronization completed successfully.');
       return true;
     } catch (err) {
-      console.error('Failed to synchronize offline data:', err);
+      console.error('Failed to synchronize data offline:', err);
       return false;
     }
   },
@@ -116,11 +165,12 @@ export const ApiService = {
   // ==========================================
   // DASHBOARD
   // ==========================================
-  getDashboardStats: async () => {
+  getDashboardStats: async (zoneId?: string) => {
     if (ApiService.isOnline()) {
       try {
-        const stats = await fetchWithAuth('dashboard/stats');
-        setLocalCache('dashboard_stats', stats);
+        const endpoint = zoneId ? `dashboard/stats?zoneId=${zoneId}` : 'dashboard/stats';
+        const stats = await fetchWithAuth(endpoint);
+        setLocalCache(`dashboard_stats_${zoneId || 'all'}`, stats);
         return stats;
       } catch (err) {
         console.warn('Dashboard fetch failed, loading from local cache:', err);
@@ -131,18 +181,54 @@ export const ApiService = {
     const workers = getLocalCache('workers', []);
     const materials = getLocalCache('materials', []);
     const ledgers = getLocalCache('ledgers', []);
+    const user = ApiService.getCurrentUser() || { role: 'owner', zones: [] };
+
+    // Resolve target zones
+    let targetZoneIds: string[] = [];
+    if (user.role === 'supervisor') {
+      targetZoneIds = zoneId ? [zoneId] : user.zones.map((z: any) => z.id);
+    } else {
+      targetZoneIds = zoneId ? [zoneId] : [];
+    }
 
     const activeWorkers = workers.filter((w: any) => w.status === 'Active');
     const masons = activeWorkers.filter((w: any) => w.role.toLowerCase().includes('mason') || w.role.toLowerCase().includes('mistri')).length;
     const labors = activeWorkers.length - masons;
 
-    const totalLaborWages = ledgers.reduce((sum: number, l: any) => sum + (l.earned || 0), 0);
-    const totalLaborAdvances = ledgers.reduce((sum: number, l: any) => sum + (l.advances || 0), 0);
-    const totalLaborOutstanding = ledgers.reduce((sum: number, l: any) => sum + (l.balance || 0), 0);
+    // Filter materials
+    let filteredMaterials = materials;
+    if (targetZoneIds.length > 0) {
+      filteredMaterials = materials.filter((m: any) => m.zoneId && targetZoneIds.includes(m.zoneId));
+    } else if (user.role === 'supervisor') {
+      filteredMaterials = [];
+    }
 
-    const totalMaterialCost = materials.reduce((sum: number, m: any) => sum + (m.totalCost || 0), 0);
-    const totalMaterialPaid = materials.reduce((sum: number, m: any) => sum + (m.paidAmount || 0), 0);
-    const totalMaterialOutstanding = materials.reduce((sum: number, m: any) => sum + (m.balanceDue || 0), 0);
+    // Filter ledgers
+    let filteredLedgers = ledgers;
+    if (targetZoneIds.length > 0) {
+      filteredLedgers = ledgers.map((l: any) => {
+        const zoneTxs = l.transactions.filter((t: any) => t.zoneId && targetZoneIds.includes(t.zoneId));
+        const earned = zoneTxs.filter((t: any) => t.type === 'Wage').reduce((sum: number, t: any) => sum + t.amount, 0);
+        const advances = zoneTxs.filter((t: any) => t.type === 'Advance').reduce((sum: number, t: any) => sum + t.amount, 0);
+        const settled = zoneTxs.filter((t: any) => t.type === 'Settlement').reduce((sum: number, t: any) => sum + t.amount, 0);
+        return {
+          ...l,
+          earned,
+          advances,
+          settled,
+          balance: earned - advances - settled,
+          transactions: zoneTxs,
+        };
+      }).filter((l: any) => l.transactions.length > 0);
+    }
+
+    const totalLaborWages = filteredLedgers.reduce((sum: number, l: any) => sum + (l.earned || 0), 0);
+    const totalLaborAdvances = filteredLedgers.reduce((sum: number, l: any) => sum + (l.advances || 0), 0);
+    const totalLaborOutstanding = filteredLedgers.reduce((sum: number, l: any) => sum + (l.balance || 0), 0);
+
+    const totalMaterialCost = filteredMaterials.reduce((sum: number, m: any) => sum + (m.totalCost || 0), 0);
+    const totalMaterialPaid = filteredMaterials.reduce((sum: number, m: any) => sum + (m.paidAmount || 0), 0);
+    const totalMaterialOutstanding = filteredMaterials.reduce((sum: number, m: any) => sum + (m.balanceDue || 0), 0);
 
     return {
       totalActiveWorkers: activeWorkers.length,
@@ -159,7 +245,7 @@ export const ApiService = {
   },
 
   // ==========================================
-  // WORKERS
+  // WORKERS (Master Data)
   // ==========================================
   getWorkers: async () => {
     if (ApiService.isOnline()) {
@@ -182,7 +268,6 @@ export const ApiService = {
       createdAt: new Date().toISOString(),
     };
 
-    // Update Local Cache immediately
     const cachedWorkers = getLocalCache('workers', []);
     cachedWorkers.unshift(localWorker);
     setLocalCache('workers', cachedWorkers);
@@ -193,7 +278,6 @@ export const ApiService = {
           method: 'POST',
           body: JSON.stringify(workerData),
         });
-        // Replace temp local worker with actual server worker in cache
         const freshWorkers = cachedWorkers.map((w: any) => w.id === localWorker.id ? saved : w);
         setLocalCache('workers', freshWorkers);
         return saved;
@@ -231,6 +315,12 @@ export const ApiService = {
     return { id, ...workerData };
   },
 
+  deleteWorker: async (id: string) => {
+    return fetchWithAuth(`workers/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // ==========================================
   // ATTENDANCE
   // ==========================================
@@ -238,7 +328,6 @@ export const ApiService = {
     if (ApiService.isOnline()) {
       try {
         const list = await fetchWithAuth(`attendance/date/${date}`);
-        // Merge into local attendance cache
         const allLocal = getLocalCache('attendances', []);
         const filtered = allLocal.filter((a: any) => a.date !== date);
         setLocalCache('attendances', [...filtered, ...list]);
@@ -261,7 +350,6 @@ export const ApiService = {
     const localId = generateUUID();
     const newRecord = { id: localId, ...attendanceData };
 
-    // Update Local Attendances Cache
     const all = getLocalCache('attendances', []);
     const filtered = all.filter((a: any) => !(a.workerId === attendanceData.workerId && a.date === attendanceData.date));
     setLocalCache('attendances', [...filtered, newRecord]);
@@ -279,7 +367,6 @@ export const ApiService = {
       const otWage = (attendanceData.overtimeHours || 0) * hourly * 1.5;
       const calculatedWage = (dailyRate * mult) + otWage;
 
-      // Update local transaction ledger
       const ledgers = getLocalCache('ledgers', []);
       let workerLedger = ledgers.find((l: any) => l.worker.id === attendanceData.workerId);
       
@@ -295,7 +382,6 @@ export const ApiService = {
         ledgers.push(workerLedger);
       }
 
-      // Check for pre-existing auto wage for this date
       const existingWageTxIndex = workerLedger.transactions.findIndex(
         (t: any) => t.date === attendanceData.date && t.type === 'Wage'
       );
@@ -307,6 +393,7 @@ export const ApiService = {
           type: 'Wage',
           amount: calculatedWage,
           date: attendanceData.date,
+          zoneId: attendanceData.zoneId,
           notes: `Auto-calculated wage for ${attendanceData.status}${attendanceData.overtimeHours ? ` + ${attendanceData.overtimeHours}hr OT` : ''}`,
         };
 
@@ -321,7 +408,6 @@ export const ApiService = {
         }
       }
 
-      // Recalculate ledger sums
       workerLedger.earned = workerLedger.transactions
         .filter((t: any) => t.type === 'Wage')
         .reduce((sum: number, t: any) => sum + t.amount, 0);
@@ -369,14 +455,14 @@ export const ApiService = {
 
   logTransaction: async (txData: {
     workerId: string;
-    type: string; // Advance or Settlement
+    type: string;
     amount: number;
     date: string;
+    zoneId?: string;
     notes?: string;
   }) => {
     const localTx = { id: generateUUID(), ...txData };
 
-    // Update Local Ledger Cache
     const ledgers = getLocalCache('ledgers', []);
     const workerLedger = ledgers.find((l: any) => l.worker.id === txData.workerId);
     

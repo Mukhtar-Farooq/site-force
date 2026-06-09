@@ -15,6 +15,7 @@ interface Transaction {
   amount: number;
   date: string;
   notes?: string;
+  zoneId?: string;
 }
 
 interface Ledger {
@@ -26,19 +27,27 @@ interface Ledger {
   transactions: Transaction[];
 }
 
+interface Zone {
+  id: string;
+  name: string;
+}
+
 interface FinancialLedgerProps {
   ledgers: Ledger[];
+  zones: Zone[];
   onLogTransaction: (data: {
     workerId: string;
     type: string;
     amount: number;
     date: string;
+    zoneId?: string;
     notes?: string;
   }) => Promise<any>;
 }
 
 export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
   ledgers,
+  zones,
   onLogTransaction,
 }) => {
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
@@ -52,6 +61,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
+  const [zoneId, setZoneId] = useState('');
   const [notes, setNotes] = useState('');
 
   // Automatically select first worker if available
@@ -74,11 +84,13 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
         type,
         amount: Number(amount),
         date,
+        zoneId: zoneId || undefined,
         notes,
       });
 
       setAmount(0);
       setNotes('');
+      setZoneId('');
       setShowLogModal(false);
     } catch (err) {
       console.error(err);
@@ -332,6 +344,21 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
                   value={date} 
                   onChange={(e) => setDate(e.target.value)} 
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Allocate to Site Zone</label>
+                <select 
+                  className="form-select" 
+                  required
+                  value={zoneId} 
+                  onChange={(e) => setZoneId(e.target.value)}
+                >
+                  <option value="">-- Choose Zone --</option>
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.id}>{z.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
