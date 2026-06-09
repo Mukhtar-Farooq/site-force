@@ -224,7 +224,15 @@ function App() {
     setAuthLoading(true);
     setAuthError('');
     try {
-      await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      if (isMockAuth) {
+        setUser({
+          email: authEmail,
+          displayName: 'Developer Supervisor',
+          uid: 'dev-supervisor-id',
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      }
     } catch (err: any) {
       setAuthError(err.message || 'Authentication failed. Please check credentials.');
     } finally {

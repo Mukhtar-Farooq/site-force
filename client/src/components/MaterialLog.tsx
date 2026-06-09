@@ -117,11 +117,11 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         <div className="glass-card" style={{ padding: '16px 24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Total Materials Cost</p>
-          <h4 style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: 'var(--accent-secondary)' }}>${totalSpent.toFixed(2)}</h4>
+          <h4 style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: 'var(--accent-secondary)' }}>₹{totalSpent.toFixed(2)}</h4>
         </div>
         <div className="glass-card" style={{ padding: '16px 24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Total Balance Owed</p>
-          <h4 style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: 'var(--status-halfday)' }}>${totalOwed.toFixed(2)}</h4>
+          <h4 style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: 'var(--status-halfday)' }}>₹{totalOwed.toFixed(2)}</h4>
         </div>
         <div className="glass-card" style={{ padding: '16px 24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Total Procurements</p>
@@ -183,14 +183,14 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
                         {m.paymentStatus}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>${m.totalCost.toFixed(2)}</td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>₹{m.totalCost.toFixed(2)}</td>
                     <td style={{
                       padding: '12px',
                       textAlign: 'right',
                       fontWeight: 600,
                       color: m.balanceDue > 0 ? 'var(--status-halfday)' : 'var(--text-secondary)'
                     }}>
-                      ${m.balanceDue.toFixed(2)}
+                      ₹{m.balanceDue.toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -298,14 +298,14 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit Price ($)</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit Price (₹)</label>
                   <input type="number" className="form-input" min={0} required placeholder="Price per unit" value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount Paid ($)</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount Paid (₹)</label>
                   <input type="number" className="form-input" min={0} value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))} />
                 </div>
                 <div>
@@ -325,7 +325,7 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
               </div>
 
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 0' }}>
-                Total Cost Breakdown: <strong style={{ color: 'var(--text-primary)' }}>${(quantity * unitPrice).toFixed(2)}</strong> (Remaining Balance: <strong style={{ color: 'var(--status-halfday)' }}>${(quantity * unitPrice - paidAmount).toFixed(2)}</strong>)
+                Total Cost Breakdown: <strong style={{ color: 'var(--text-primary)' }}>₹{(quantity * unitPrice).toFixed(2)}</strong> (Remaining Balance: <strong style={{ color: 'var(--status-halfday)' }}>₹{(quantity * unitPrice - paidAmount).toFixed(2)}</strong>)
               </div>
 
               <button 

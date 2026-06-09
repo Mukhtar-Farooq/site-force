@@ -167,7 +167,7 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
             <div style={{ borderTop: '1px solid var(--border-card)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Daily Rate:</span>
-                <span style={{ fontWeight: 600, color: 'var(--status-present)' }}>${worker.dailyRate.toFixed(2)}/day</span>
+                <span style={{ fontWeight: 600, color: 'var(--status-present)' }}>₹{worker.dailyRate.toFixed(2)}/day</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -318,7 +318,7 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Daily Rate ($)</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Daily Rate (₹)</label>
                   <input type="number" className="form-input" min={1} required value={dailyRate} onChange={(e) => setDailyRate(Number(e.target.value))} />
                 </div>
               </div>

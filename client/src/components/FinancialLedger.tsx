@@ -134,7 +134,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
               </div>
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Total Wages Earned</p>
-                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>${activeLedger.earned.toFixed(2)}</h4>
+                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>₹{activeLedger.earned.toFixed(2)}</h4>
               </div>
             </div>
 
@@ -145,7 +145,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
               </div>
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Advances Issued</p>
-                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>-${activeLedger.advances.toFixed(2)}</h4>
+                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>-₹{activeLedger.advances.toFixed(2)}</h4>
               </div>
             </div>
 
@@ -156,7 +156,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
               </div>
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Payments Settled</p>
-                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>-${activeLedger.settled.toFixed(2)}</h4>
+                <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px' }}>-₹{activeLedger.settled.toFixed(2)}</h4>
               </div>
             </div>
 
@@ -179,7 +179,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>Outstanding Balance</p>
                 <h4 style={{ fontSize: '20px', fontWeight: 700, marginTop: '2px', color: activeLedger.balance > 0 ? 'var(--status-halfday)' : 'var(--text-primary)' }}>
-                  ${activeLedger.balance.toFixed(2)}
+                  ₹{activeLedger.balance.toFixed(2)}
                 </h4>
               </div>
             </div>
@@ -236,7 +236,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
                             tx.type === 'Wage' ? 'var(--text-primary)' :
                             tx.type === 'Advance' ? 'var(--status-absent)' : 'var(--status-present)'
                         }}>
-                          {tx.type === 'Wage' ? '' : tx.type === 'Advance' ? '-' : '+'}${tx.amount.toFixed(2)}
+                          {tx.type === 'Wage' ? '' : tx.type === 'Advance' ? '-' : '+'}₹{tx.amount.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -311,7 +311,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount ($)</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount (₹)</label>
                   <input 
                     type="number" 
                     className="form-input" 

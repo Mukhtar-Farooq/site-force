@@ -63,9 +63,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
           </div>
           <div>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 500 }}>Labor Wages</p>
-            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>${stats.totalLaborWages.toFixed(2)}</h3>
+            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>₹{stats.totalLaborWages.toFixed(2)}</h3>
             <p style={{ color: 'var(--status-absent)', fontSize: '12px', fontWeight: 600 }}>
-              ${stats.totalLaborOutstanding.toFixed(2)} Dues Outstanding
+              ₹{stats.totalLaborOutstanding.toFixed(2)} Dues Outstanding
             </p>
           </div>
         </div>
@@ -82,9 +82,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
           </div>
           <div>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 500 }}>Materials Cost</p>
-            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>${stats.totalMaterialCost.toFixed(2)}</h3>
+            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>₹{stats.totalMaterialCost.toFixed(2)}</h3>
             <p style={{ color: 'var(--status-halfday)', fontSize: '12px', fontWeight: 600 }}>
-              ${stats.totalMaterialOutstanding.toFixed(2)} Supplier Dues
+              ₹{stats.totalMaterialOutstanding.toFixed(2)} Supplier Dues
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
           </div>
           <div>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 500 }}>Total Project Cost</p>
-            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>${stats.totalSiteCost.toFixed(2)}</h3>
+            <h3 style={{ fontSize: '24px', fontWeight: 700, margin: '2px 0' }}>₹{stats.totalSiteCost.toFixed(2)}</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
               Wages + Materials
             </p>
@@ -144,11 +144,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, onNavigate }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent)' }} />
-                <span>Labor Wages: <strong>{laborPct.toFixed(1)}%</strong> (${stats.totalLaborWages.toFixed(0)})</span>
+                <span>Labor Wages: <strong>{laborPct.toFixed(1)}%</strong> (₹{stats.totalLaborWages.toFixed(0)})</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-secondary)' }} />
-                <span>Materials: <strong>{materialPct.toFixed(1)}%</strong> (${stats.totalMaterialCost.toFixed(0)})</span>
+                <span>Materials: <strong>{materialPct.toFixed(1)}%</strong> (₹{stats.totalMaterialCost.toFixed(0)})</span>
               </div>
             </div>
           </div>
