@@ -237,16 +237,8 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
 
             return (
               <div 
-                className="glass-card" 
+                className="glass-card attendance-card" 
                 key={worker.id} 
-                style={{
-                  padding: '16px 24px',
-                  display: 'grid',
-                  gridTemplateColumns: '1.5fr 2fr 1.5fr 1.5fr',
-                  alignItems: 'center',
-                  gap: '24px',
-                  flexWrap: 'wrap',
-                }}
               >
                 {/* 1. Worker Name & Role */}
                 <div>

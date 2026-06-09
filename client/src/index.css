@@ -213,3 +213,142 @@ body {
 .floating-icon {
   animation: float 3s ease-in-out infinite;
 }
+
+/* ==========================================
+   RESPONSIVE LAYOUT & MOBILE OPTIMIZATIONS
+   ========================================== */
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-card);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 100;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  transition: transform var(--transition-smooth);
+}
+
+.attendance-card {
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1.5fr 1.5fr;
+  align-items: center;
+  gap: 24px;
+}
+
+.main-content {
+  flex: 1;
+  padding: 36px 48px;
+  overflow-y: auto;
+  height: 100vh;
+  background: var(--bg-app);
+}
+
+.mobile-header {
+  display: none;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-card);
+  padding: 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  height: 60px;
+}
+
+.drawer-overlay {
+  display: none;
+}
+
+/* Mobile responsive media queries (screen < 768px) */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .attendance-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+    padding: 16px !important;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+    height: 100vh;
+    width: 280px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    padding: 20px 16px;
+    height: calc(100vh - 60px);
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .mobile-close-btn {
+    display: block !important;
+  }
+
+  .drawer-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 95;
+    opacity: 0;
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+    transition: opacity var(--transition-smooth);
+  }
+
+  .drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Table responsiveness wrapper */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimize card padding for small screens */
+  .glass-card {
+    padding: 16px !important;
+  }
+
+  /* Form columns wrapping on small screens */
+  div[style*="display: grid"][style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}

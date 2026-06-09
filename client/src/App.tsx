@@ -13,10 +13,11 @@ import {
   Moon,
   Wifi,
   WifiOff,
-  RefreshCw,
   LogOut,
   Hammer,
-  Shield
+  Shield,
+  Menu,
+  RefreshCw
 } from 'lucide-react';
 
 // Subcomponents
@@ -34,6 +35,7 @@ function App() {
   const [theme, setTheme] = useState<'dark' | 'sunlight'>('dark');
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   // Authentication States
   const [user, setUser] = useState<any>(() => ApiService.getCurrentUser());
@@ -350,32 +352,74 @@ function App() {
 
   // Render Core App Dashboard
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <div className="app-container">
       
+      {/* Mobile Header */}
+      <header className="mobile-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '4px',
+            }}
+          >
+            <Menu size={24} />
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Hammer size={18} style={{ color: 'var(--accent)' }} />
+            <span style={{ fontSize: '18px', fontWeight: 700 }}>SiteForce</span>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {isOnline ? (
+            <Wifi size={16} style={{ color: 'var(--status-present)' }} />
+          ) : (
+            <WifiOff size={16} style={{ color: 'var(--status-absent)' }} />
+          )}
+        </div>
+      </header>
+
+      {/* Drawer Overlay */}
+      <div 
+        className={`drawer-overlay ${isMenuOpen ? 'active' : ''}`} 
+        onClick={() => setIsMenuOpen(false)} 
+      />
+
       {/* 1. Sidebar Navigation */}
-      <aside style={{
-        width: '260px',
-        background: 'var(--bg-sidebar)',
-        borderRight: '1px solid var(--border-card)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '24px 16px',
-        gap: '24px',
-        flexShrink: 0,
-        zIndex: 10,
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-      }}>
+      <aside className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
         {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 8px' }}>
-          <div style={{ background: 'var(--accent-glow)', color: 'var(--accent)', padding: '8px', borderRadius: '10px' }}>
-            <Hammer size={22} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 8px' }}>
+            <div style={{ background: 'var(--accent-glow)', color: 'var(--accent)', padding: '8px', borderRadius: '10px' }}>
+              <Hammer size={22} />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px' }}>SiteForce</h1>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Site Management Console</p>
+            </div>
           </div>
-          <div>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px' }}>SiteForce</h1>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Site Management Console</p>
-          </div>
+          <button 
+            onClick={() => setIsMenuOpen(false)} 
+            className="mobile-close-btn"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '22px',
+              cursor: 'pointer',
+              padding: '8px',
+              display: 'none',
+            }}
+          >
+            ×
+          </button>
         </div>
 
         {/* Tab Selection Navigation */}
@@ -386,7 +430,10 @@ function App() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setIsMenuOpen(false);
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -503,12 +550,7 @@ function App() {
       </aside>
 
       {/* 2. Main Page Content Window */}
-      <main style={{
-        flex: 1,
-        padding: '36px 48px',
-        overflowY: 'auto',
-        height: '100vh',
-      }}>
+      <main className="main-content">
         {/* Tab Content Router */}
         {activeTab === 'dashboard' && (
           <Dashboard 
