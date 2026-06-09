@@ -1,6 +1,6 @@
 import { isMockAuth, auth } from '../config/firebase';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://site-force-backend.onrender.com/api';
 
 // Simple UUID generator for local offline entity creation
 export function generateUUID() {
