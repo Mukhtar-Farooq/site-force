@@ -1,5 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
@@ -86,6 +87,4 @@ export class AppModule implements OnModuleInit {
   }
 }
 
-// InjectRepository helper import (TypeORM decorators inside app.module)
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+
