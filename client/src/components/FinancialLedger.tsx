@@ -43,6 +43,7 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
 }) => {
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
   const [showLogModal, setShowLogModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form States
   const [amount, setAmount] = useState<number>(0);
@@ -64,19 +65,26 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedWorkerId || amount <= 0) return;
+    if (!selectedWorkerId || amount <= 0 || isSubmitting) return;
 
-    await onLogTransaction({
-      workerId: selectedWorkerId,
-      type,
-      amount: Number(amount),
-      date,
-      notes,
-    });
+    setIsSubmitting(true);
+    try {
+      await onLogTransaction({
+        workerId: selectedWorkerId,
+        type,
+        amount: Number(amount),
+        date,
+        notes,
+      });
 
-    setAmount(0);
-    setNotes('');
-    setShowLogModal(false);
+      setAmount(0);
+      setNotes('');
+      setShowLogModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -263,7 +271,19 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
           <div className="glass-card" style={{ width: '90%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Log Financial Activity</h3>
-              <button onClick={() => setShowLogModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              <button 
+                onClick={() => !isSubmitting && setShowLogModal(false)} 
+                disabled={isSubmitting} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  fontSize: '20px', 
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -326,8 +346,13 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
                 />
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>
-                Save Transaction
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                style={{ marginTop: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Transaction'}
               </button>
             </form>
           </div>

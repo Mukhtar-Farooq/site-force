@@ -19,16 +19,24 @@ export const ZoneAllocator: React.FC<ZoneAllocatorProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || isSubmitting) return;
 
-    await onCreateZone({ name, description });
+    setIsSubmitting(true);
+    try {
+      await onCreateZone({ name, description });
 
-    setName('');
-    setDescription('');
-    setShowAddModal(false);
+      setName('');
+      setDescription('');
+      setShowAddModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -95,7 +103,19 @@ export const ZoneAllocator: React.FC<ZoneAllocatorProps> = ({
               <h3 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FolderPlus size={22} style={{ color: 'var(--accent)' }} /> Create Construction Zone
               </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              <button 
+                onClick={() => !isSubmitting && setShowAddModal(false)} 
+                disabled={isSubmitting} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  fontSize: '20px', 
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -116,8 +136,13 @@ export const ZoneAllocator: React.FC<ZoneAllocatorProps> = ({
                 />
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>
-                Save Zone
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                style={{ marginTop: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Zone'}
               </button>
             </form>
           </div>

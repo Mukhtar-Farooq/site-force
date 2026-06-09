@@ -28,6 +28,7 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Add Worker Form States
   const [name, setName] = useState('');
@@ -49,23 +50,30 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || dailyRate <= 0) return;
+    if (!name || !phone || dailyRate <= 0 || isSubmitting) return;
 
-    await onCreateWorker({
-      name,
-      phone,
-      role,
-      dailyRate: Number(dailyRate),
-      photoBase64,
-    });
+    setIsSubmitting(true);
+    try {
+      await onCreateWorker({
+        name,
+        phone,
+        role,
+        dailyRate: Number(dailyRate),
+        photoBase64,
+      });
 
-    // Reset fields
-    setName('');
-    setPhone('');
-    setRole('Labor');
-    setDailyRate(20);
-    setPhotoBase64(undefined);
-    setShowAddModal(false);
+      // Reset fields
+      setName('');
+      setPhone('');
+      setRole('Labor');
+      setDailyRate(20);
+      setPhotoBase64(undefined);
+      setShowAddModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredWorkers = workers.filter((w) => {
@@ -236,7 +244,19 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
               <h3 style={{ fontSize: '22px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserPlus size={22} style={{ color: 'var(--accent)' }} /> Add Crew Member
               </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              <button 
+                onClick={() => !isSubmitting && setShowAddModal(false)} 
+                disabled={isSubmitting} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  fontSize: '20px', 
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -303,8 +323,13 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}>
-                Onboard Worker
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                style={{ marginTop: '10px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Onboarding...' : 'Onboard Worker'}
               </button>
             </form>
           </div>

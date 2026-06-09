@@ -184,11 +184,21 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
         </div>
         <button 
           onClick={handleMarkAllPresent}
-          disabled={activeWorkers.length === 0}
+          disabled={activeWorkers.length === 0 || loading}
           className="btn-primary" 
-          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}
+          style={{ 
+            background: 'linear-gradient(135deg, #10b981, #059669)', 
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
         >
-          <CheckCircle2 size={20} /> Mark All Present
+          {loading ? (
+            'Saving...'
+          ) : (
+            <>
+              <CheckCircle2 size={20} /> Mark All Present
+            </>
+          )}
         </button>
       </div>
 

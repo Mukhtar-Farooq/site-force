@@ -34,6 +34,7 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
   onLogMaterial,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form States
   const [name, setName] = useState('');
@@ -62,30 +63,37 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !supplier || quantity <= 0 || unitPrice <= 0) return;
+    if (!name || !supplier || quantity <= 0 || unitPrice <= 0 || isSubmitting) return;
 
-    await onLogMaterial({
-      name,
-      supplier,
-      quantity: Number(quantity),
-      unit,
-      unitPrice: Number(unitPrice),
-      paidAmount: Number(paidAmount),
-      date,
-      zoneId: zoneId || undefined,
-      photoBase64,
-    });
+    setIsSubmitting(true);
+    try {
+      await onLogMaterial({
+        name,
+        supplier,
+        quantity: Number(quantity),
+        unit,
+        unitPrice: Number(unitPrice),
+        paidAmount: Number(paidAmount),
+        date,
+        zoneId: zoneId || undefined,
+        photoBase64,
+      });
 
-    // Reset Form
-    setName('');
-    setSupplier('');
-    setQuantity(1);
-    setUnit('Bags');
-    setUnitPrice(0);
-    setPaidAmount(0);
-    setZoneId('');
-    setPhotoBase64(undefined);
-    setShowAddModal(false);
+      // Reset Form
+      setName('');
+      setSupplier('');
+      setQuantity(1);
+      setUnit('Bags');
+      setUnitPrice(0);
+      setPaidAmount(0);
+      setZoneId('');
+      setPhotoBase64(undefined);
+      setShowAddModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const totalSpent = materials.reduce((sum, m) => sum + m.totalCost, 0);
@@ -212,7 +220,19 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
               <h3 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Package size={22} style={{ color: 'var(--accent-secondary)' }} /> Log Material Purchase
               </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              <button 
+                onClick={() => !isSubmitting && setShowAddModal(false)} 
+                disabled={isSubmitting} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  fontSize: '20px', 
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -308,8 +328,16 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
                 Total Cost Breakdown: <strong style={{ color: 'var(--text-primary)' }}>${(quantity * unitPrice).toFixed(2)}</strong> (Remaining Balance: <strong style={{ color: 'var(--status-halfday)' }}>${(quantity * unitPrice - paidAmount).toFixed(2)}</strong>)
               </div>
 
-              <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, var(--accent-secondary), #0891b2)' }}>
-                Save Procurement
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                style={{ 
+                  background: 'linear-gradient(135deg, var(--accent-secondary), #0891b2)', 
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Procurement'}
               </button>
             </form>
           </div>
