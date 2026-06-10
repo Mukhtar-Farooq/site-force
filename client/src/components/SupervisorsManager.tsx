@@ -150,84 +150,76 @@ export const SupervisorsManager: React.FC<SupervisorsManagerProps> = ({
 
       {/* Add Supervisor Modal */}
       {showAddModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '460px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '460px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Key size={20} style={{ color: 'var(--accent)' }} /> Add Site Supervisor
               </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              <button onClick={() => setShowAddModal(false)} className="modal-close-btn">×</button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Email Address</label>
-                <input 
-                  type="email" 
-                  className="form-input" 
-                  required 
-                  placeholder="e.g. supervisor.blocka@siteforce.com" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body-scroll">
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Email Address</label>
+                  <input 
+                    type="email" 
+                    className="form-input" 
+                    required 
+                    placeholder="e.g. supervisor.blocka@siteforce.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                  />
+                </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Password</label>
-                <input 
-                  type="password" 
-                  className="form-input" 
-                  required 
-                  placeholder="Minimum 6 characters" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                />
-              </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Password</label>
+                  <input 
+                    type="password" 
+                    className="form-input" 
+                    required 
+                    placeholder="Minimum 6 characters" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                  />
+                </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-secondary)' }}>Assign to Zones (Choose at least one)</label>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '10px', 
-                  maxHeight: '150px', 
-                  overflowY: 'auto',
-                  border: '1px solid var(--border-card)',
-                  padding: '12px',
-                  borderRadius: '10px',
-                  background: 'rgba(0,0,0,0.1)'
-                }}>
-                  {zones.map((zone) => (
-                    <label key={zone.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={selectedZoneIds.includes(zone.id)} 
-                        onChange={() => handleZoneToggle(zone.id)} 
-                      />
-                      <span>{zone.name}</span>
-                    </label>
-                  ))}
-                  {zones.length === 0 && (
-                    <p style={{ color: 'var(--status-absent)', fontSize: '13px', fontStyle: 'italic' }}>Please create site zones first before adding supervisors.</p>
-                  )}
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-secondary)' }}>Assign to Zones (Choose at least one)</label>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '10px', 
+                    maxHeight: '120px', 
+                    overflowY: 'auto',
+                    border: '1px solid var(--border-card)',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    background: 'rgba(0,0,0,0.1)'
+                  }}>
+                    {zones.map((zone) => (
+                      <label key={zone.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedZoneIds.includes(zone.id)} 
+                          onChange={() => handleZoneToggle(zone.id)} 
+                        />
+                        <span>{zone.name}</span>
+                      </label>
+                    ))}
+                    {zones.length === 0 && (
+                      <p style={{ color: 'var(--status-absent)', fontSize: '13px', fontStyle: 'italic' }}>Please create site zones first before adding supervisors.</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>
-                Create Supervisor Login
-              </button>
+              <div className="modal-footer">
+                <button type="submit" className="btn-primary" style={{ width: '100%' }}>
+                  Create Supervisor Login
+                </button>
+              </div>
             </form>
           </div>
         </div>

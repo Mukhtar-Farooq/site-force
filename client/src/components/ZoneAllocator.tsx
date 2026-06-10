@@ -85,65 +85,52 @@ export const ZoneAllocator: React.FC<ZoneAllocatorProps> = ({
 
       {/* Add Zone Modal */}
       {showAddModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '440px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FolderPlus size={22} style={{ color: 'var(--accent)' }} /> Create Construction Zone
               </h3>
               <button 
                 onClick={() => !isSubmitting && setShowAddModal(false)} 
                 disabled={isSubmitting} 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: 'var(--text-muted)', 
-                  fontSize: '20px', 
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-                }}
+                className="modal-close-btn"
+                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Zone Name</label>
-                <input type="text" className="form-input" required placeholder="e.g. Block A - Foundation / Floor 1 Plaster" value={name} onChange={(e) => setName(e.target.value)} />
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body-scroll">
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Zone Name</label>
+                  <input type="text" className="form-input" required placeholder="e.g. Block A - Foundation / Floor 1 Plaster" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Description</label>
+                  <textarea 
+                    className="form-input" 
+                    rows={3} 
+                    style={{ resize: 'none' }}
+                    placeholder="e.g. Area designated for raw excavation and basement columns"
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Description</label>
-                <textarea 
-                  className="form-input" 
-                  rows={3} 
-                  style={{ resize: 'none' }}
-                  placeholder="e.g. Area designated for raw excavation and basement columns"
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)}
-                />
+              <div className="modal-footer">
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  style={{ width: '100%', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Zone'}
+                </button>
               </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ marginTop: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Zone'}
-              </button>
             </form>
           </div>
         </div>

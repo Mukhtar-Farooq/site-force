@@ -222,153 +222,140 @@ export const MaterialLog: React.FC<MaterialLogProps> = ({
 
       {/* Add Procurement Modal */}
       {showAddModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Package size={22} style={{ color: 'var(--accent-secondary)' }} /> Log Material Purchase
               </h3>
               <button 
                 onClick={() => !isSubmitting && setShowAddModal(false)} 
                 disabled={isSubmitting} 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: 'var(--text-muted)', 
-                  fontSize: '20px', 
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-                }}
+                className="modal-close-btn"
+                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              {/* Photo Upload */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '90px',
-                  height: '70px',
-                  borderRadius: '6px',
-                  background: 'var(--bg-app)',
-                  border: '2px dashed var(--border-card-hover)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  position: 'relative',
-                }}>
-                  {photoBase64 ? (
-                    <img src={photoBase64} alt="Invoice Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <Camera size={20} style={{ color: 'var(--text-muted)' }} />
-                  )}
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body-scroll">
+                {/* Photo Upload */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '90px',
+                    height: '70px',
+                    borderRadius: '6px',
+                    background: 'var(--bg-app)',
+                    border: '2px dashed var(--border-card-hover)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}>
+                    {photoBase64 ? (
+                      <img src={photoBase64} alt="Invoice Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <Camera size={20} style={{ color: 'var(--text-muted)' }} />
+                    )}
+                  </div>
+                  <label style={{
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'var(--accent-secondary)',
+                    cursor: 'pointer',
+                    border: '1px solid var(--accent-secondary)',
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                  }}>
+                    Upload Invoice / Receipt Image
+                    <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                  </label>
                 </div>
-                <label style={{
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--accent-secondary)',
-                  cursor: 'pointer',
-                  border: '1px solid var(--accent-secondary)',
-                  padding: '4px 12px',
-                  borderRadius: '6px',
-                }}>
-                  Upload Invoice / Receipt Image
-                  <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                </label>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Material Name</label>
-                  <input type="text" className="form-input" required placeholder="e.g. Cement Bags / Sand" value={name} onChange={(e) => setName(e.target.value)} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Material Name</label>
+                    <input type="text" className="form-input" required placeholder="e.g. Cement Bags / Sand" value={name} onChange={(e) => setName(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Supplier / Vendor</label>
+                    <input type="text" className="form-input" required placeholder="e.g. Ultratech / Local Supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} />
+                  </div>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Supplier / Vendor</label>
-                  <input type="text" className="form-input" required placeholder="e.g. Ultratech / Local Supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} />
-                </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Quantity</label>
-                  <input type="number" className="form-input" min={1} required value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Quantity</label>
+                    <input type="number" className="form-input" min={1} required value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit</label>
+                    <select className="form-select" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                      <option value="Bags">Bags</option>
+                      <option value="Tons">Tons</option>
+                      <option value="Brass">Brass</option>
+                      <option value="Units">Units</option>
+                      <option value="Liters">Liters</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit Price (₹)</label>
+                    <input type="number" className="form-input" min={0} required placeholder="Price per unit" value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
+                  </div>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount Paid (₹)</label>
+                    <input type="number" className="form-input" min={0} value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Invoice Date</label>
+                    <input type="date" className="form-input" required value={date} onChange={(e) => setDate(e.target.value)} />
+                  </div>
+                </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit</label>
-                  <select className="form-select" value={unit} onChange={(e) => setUnit(e.target.value)}>
-                    <option value="Bags">Bags</option>
-                    <option value="Tons">Tons</option>
-                    <option value="Brass">Brass</option>
-                    <option value="Units">Units</option>
-                    <option value="Liters">Liters</option>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Allocate to Site Zone (Optional)</label>
+                  <select className="form-select" value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
+                    <option value="">-- No Zone Allocation --</option>
+                    {zones.map((z) => (
+                      <option key={z.id} value={z.id}>{z.name}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Unit Price (₹)</label>
-                  <input type="number" className="form-input" min={0} required placeholder="Price per unit" value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Paid By (Payer)</label>
+                  <select className="form-select" value={paidByWorkerId} onChange={(e) => setPaidByWorkerId(e.target.value)}>
+                    <option value="">Owner (Default)</option>
+                    {workers.filter(w => w.status === 'Active').map((w) => (
+                      <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 0' }}>
+                  Total Cost Breakdown: <strong style={{ color: 'var(--text-primary)' }}>₹{(quantity * unitPrice).toFixed(2)}</strong> (Remaining Balance: <strong style={{ color: 'var(--status-halfday)' }}>₹{(quantity * unitPrice - paidAmount).toFixed(2)}</strong>)
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount Paid (₹)</label>
-                  <input type="number" className="form-input" min={0} value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Invoice Date</label>
-                  <input type="date" className="form-input" required value={date} onChange={(e) => setDate(e.target.value)} />
-                </div>
+              <div className="modal-footer">
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  style={{ 
+                    width: '100%',
+                    background: 'linear-gradient(135deg, var(--accent-secondary), #0891b2)', 
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer' 
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Procurement'}
+                </button>
               </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Allocate to Site Zone (Optional)</label>
-                <select className="form-select" value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
-                  <option value="">-- No Zone Allocation --</option>
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Paid By (Payer)</label>
-                <select className="form-select" value={paidByWorkerId} onChange={(e) => setPaidByWorkerId(e.target.value)}>
-                  <option value="">Owner (Default)</option>
-                  {workers.filter(w => w.status === 'Active').map((w) => (
-                    <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 0' }}>
-                Total Cost Breakdown: <strong style={{ color: 'var(--text-primary)' }}>₹{(quantity * unitPrice).toFixed(2)}</strong> (Remaining Balance: <strong style={{ color: 'var(--status-halfday)' }}>₹{(quantity * unitPrice - paidAmount).toFixed(2)}</strong>)
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ 
-                  background: 'linear-gradient(135deg, var(--accent-secondary), #0891b2)', 
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-                }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Procurement'}
-              </button>
             </form>
           </div>
         </div>

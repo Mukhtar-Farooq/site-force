@@ -267,120 +267,106 @@ export const FinancialLedger: React.FC<FinancialLedgerProps> = ({
 
       {/* Log Transaction Modal */}
       {showLogModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '440px' }}>
+            <div className="modal-header">
               <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Log Financial Activity</h3>
               <button 
                 onClick={() => !isSubmitting && setShowLogModal(false)} 
                 disabled={isSubmitting} 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: 'var(--text-muted)', 
-                  fontSize: '20px', 
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-                }}
+                className="modal-close-btn"
+                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Select Worker</label>
-                <select 
-                  className="form-select" 
-                  required
-                  value={selectedWorkerId}
-                  onChange={(e) => setSelectedWorkerId(e.target.value)}
-                >
-                  {ledgers.map((l) => (
-                    <option key={l.worker.id} value={l.worker.id}>{l.worker.name} ({l.worker.role})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body-scroll">
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Transaction Type</label>
-                  <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
-                    <option value="Advance">Advance (Paid Out)</option>
-                    <option value="Settlement">Settlement (Clearing Dues)</option>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Select Worker</label>
+                  <select 
+                    className="form-select" 
+                    required
+                    value={selectedWorkerId}
+                    onChange={(e) => setSelectedWorkerId(e.target.value)}
+                  >
+                    {ledgers.map((l) => (
+                      <option key={l.worker.id} value={l.worker.id}>{l.worker.name} ({l.worker.role})</option>
+                    ))}
                   </select>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Transaction Type</label>
+                    <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
+                      <option value="Advance">Advance (Paid Out)</option>
+                      <option value="Settlement">Settlement (Clearing Dues)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount (₹)</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      min={1} 
+                      required 
+                      value={amount} 
+                      onChange={(e) => setAmount(Number(e.target.value))} 
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Amount (₹)</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Date</label>
                   <input 
-                    type="number" 
+                    type="date" 
                     className="form-input" 
-                    min={1} 
                     required 
-                    value={amount} 
-                    onChange={(e) => setAmount(Number(e.target.value))} 
+                    value={date} 
+                    onChange={(e) => setDate(e.target.value)} 
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Allocate to Site Zone</label>
+                  <select 
+                    className="form-select" 
+                    required
+                    value={zoneId} 
+                    onChange={(e) => setZoneId(e.target.value)}
+                  >
+                    <option value="">-- Choose Zone --</option>
+                    {zones.map((z) => (
+                      <option key={z.id} value={z.id}>{z.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Notes / Description</label>
+                  <textarea 
+                    className="form-input" 
+                    rows={3} 
+                    style={{ resize: 'none' }}
+                    placeholder="e.g. Paid weekly cash advance / clear settlement dues"
+                    value={notes} 
+                    onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Date</label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  required 
-                  value={date} 
-                  onChange={(e) => setDate(e.target.value)} 
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Allocate to Site Zone</label>
-                <select 
-                  className="form-select" 
-                  required
-                  value={zoneId} 
-                  onChange={(e) => setZoneId(e.target.value)}
+              <div className="modal-footer">
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  style={{ width: '100%', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                  disabled={isSubmitting}
                 >
-                  <option value="">-- Choose Zone --</option>
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
-                </select>
+                  {isSubmitting ? 'Saving...' : 'Save Transaction'}
+                </button>
               </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Notes / Description</label>
-                <textarea 
-                  className="form-input" 
-                  rows={3} 
-                  style={{ resize: 'none' }}
-                  placeholder="e.g. Paid weekly cash advance / clear settlement dues"
-                  value={notes} 
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ marginTop: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Transaction'}
-              </button>
             </form>
           </div>
         </div>

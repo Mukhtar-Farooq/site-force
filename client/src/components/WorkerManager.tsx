@@ -226,111 +226,97 @@ export const WorkerManager: React.FC<WorkerManagerProps> = ({
 
       {/* Onboard Modal */}
       {showAddModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '22px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserPlus size={22} style={{ color: 'var(--accent)' }} /> Add Crew Member
               </h3>
               <button 
                 onClick={() => !isSubmitting && setShowAddModal(false)} 
                 disabled={isSubmitting} 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  color: 'var(--text-muted)', 
-                  fontSize: '20px', 
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-                }}
+                className="modal-close-btn"
+                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              {/* Photo Input */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  background: 'var(--bg-app)',
-                  border: '2px dashed var(--border-card-hover)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  position: 'relative',
-                }}>
-                  {photoBase64 ? (
-                    <img src={photoBase64} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <Camera size={24} style={{ color: 'var(--text-muted)' }} />
-                  )}
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body-scroll">
+                {/* Photo Input */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: 'var(--bg-app)',
+                    border: '2px dashed var(--border-card-hover)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}>
+                    {photoBase64 ? (
+                      <img src={photoBase64} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <Camera size={24} style={{ color: 'var(--text-muted)' }} />
+                    )}
+                  </div>
+                  <label style={{
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'var(--accent)',
+                    cursor: 'pointer',
+                    border: '1px solid var(--accent)',
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                  }}>
+                    Upload Photo
+                    <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                  </label>
                 </div>
-                <label style={{
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--accent)',
-                  cursor: 'pointer',
-                  border: '1px solid var(--accent)',
-                  padding: '4px 12px',
-                  borderRadius: '6px',
-                }}>
-                  Upload Photo
-                  <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                </label>
-              </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Full Name</label>
-                <input type="text" className="form-input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ramesh Kumar" />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Phone Number</label>
-                <input type="tel" className="form-input" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 9876543210" />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Role / Trade</label>
-                  <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
-                    <option value="Labor">Labor (Mazdoor)</option>
-                    <option value="Mason">Mason (Rajmistri)</option>
-                    <option value="Carpenter">Carpenter</option>
-                    <option value="Plumber">Plumber</option>
-                    <option value="Electrician">Electrician</option>
-                    <option value="Supervisor">Supervisor</option>
-                  </select>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Full Name</label>
+                  <input type="text" className="form-input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ramesh Kumar" />
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Daily Rate (₹)</label>
-                  <input type="number" className="form-input" min={1} required value={dailyRate} onChange={(e) => setDailyRate(Number(e.target.value))} />
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Phone Number</label>
+                  <input type="tel" className="form-input" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 9876543210" />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Role / Trade</label>
+                    <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
+                      <option value="Labor">Labor (Mazdoor)</option>
+                      <option value="Mason">Mason (Rajmistri)</option>
+                      <option value="Carpenter">Carpenter</option>
+                      <option value="Plumber">Plumber</option>
+                      <option value="Electrician">Electrician</option>
+                      <option value="Supervisor">Supervisor</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary)' }}>Daily Rate (₹)</label>
+                    <input type="number" className="form-input" min={1} required value={dailyRate} onChange={(e) => setDailyRate(Number(e.target.value))} />
+                  </div>
                 </div>
               </div>
 
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ marginTop: '10px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Onboarding...' : 'Onboard Worker'}
-              </button>
+              <div className="modal-footer">
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  style={{ width: '100%', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Onboarding...' : 'Onboard Worker'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
